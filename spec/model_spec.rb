@@ -3,7 +3,13 @@ require 'mor/model'
 
 class TestModel
   include Mor::Model
-  attr_accessor :id, :title, :body
+  attr_accessor :id, :title, :body, :slug
+  validates_presence_of :slug
+  before_validation :set_slug 
+  private
+  def set_slug
+    self.slug = title.downcase
+  end
 end
 
 describe Mor::Model do

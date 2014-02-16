@@ -38,12 +38,20 @@ module Mor
       end
       
       def find id
-        Mor.cache.get(key(id))
+        self.deserialize(Mor.cache.get(key(id)))
       end
       
       def all
         self.index.map{|id| find(id) }
       end
+      
+      def serialize object
+        object
+      end
+      
+      def deserialize object
+        object
+      end      
       
     end
       
@@ -51,9 +59,13 @@ module Mor
     
     included do
       
-      include ActiveModel::Model
+      include ActiveModel::Model      
+      extend ActiveModel::Callbacks     
+      include ActiveModel::Validations      
+      include ActiveModel::Validations::Callbacks
+                
+      define_model_callbacks :save, :create, :update, :destroy
       
-      define_model_callbacks :create, :update, :destroy
       validates_presence_of :id
       validate :validate_uniqueness_of_id, unless: "persisted?"
       after_create :add_to_index
@@ -113,11 +125,11 @@ module Mor
     def save_or_update
       if self.persisted?
         run_callbacks :update do
-          Mor.cache.set(self.key,self)
+          save_to_cache
         end
       else
         run_callbacks :create do
-          Mor.cache.set(self.key,self)
+          save_to_cache
         end
       end
     end
@@ -128,6 +140,12 @@ module Mor
     
     def remove_from_index
       self.class.index = self.class.index.tap{ |ids| ids.delete(self.id) } 
+    end
+    
+    def save_to_cache
+      run_callbacks :save do
+        Mor.cache.set(self.key,self.class.serialize(self))
+      end
     end
     
   end
