@@ -38,7 +38,9 @@ module Mor
       end
       
       def find id
-        self.deserialize(Mor.cache.get(key(id)))
+        if object = Mor.cache.get(key(id))
+          self.deserialize(object)
+        end
       end
       
       def all
