@@ -18,7 +18,23 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+	require 'mor'
+	
+	Mor.config do |dalli|
+		dalli['servers'] = "localhost:11211"
+	end
+	
+	class Person
+		include Mor::Model
+		attr_accessor :id, :name
+	end
+	
+	frank = Person.new(id: 1, name: "Frank")
+	frank.persisted? # false
+	frank.valid? # true
+	frank.save # true
+	
+	Person.find(1) # <Person:0x007fc510892b00 @name="Frank">
 
 ## Contributing
 

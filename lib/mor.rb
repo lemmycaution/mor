@@ -1,12 +1,29 @@
 require 'mor/version'
-require 'mor/client'
+require 'dalli'
 
 module Mor
   
-  def self.env
-    ENV['RACK_ENV'] ||= "development"
+  @@dalli = {
+    compress:     true,
+    threadsafe:   true,
+    servers:      ENV['MEMCACHIER_SERVERS'],
+    password:     ENV['MEMCACHIER_PASSWORD'],
+    username:     ENV['MEMCACHIER_USERNAME'],
+    async:        true
+  }
+  
+  def self.dalli
+    @@dalli
   end
   
-  extend Client
+  def self.config
+    yield self
+  end
+  
+  def self.cache
+    @@cache ||= begin
+      ::Dalli::Client.new self.dalli["servers"].split(","), self.dalli.reject{|k,v| k == "servers"}
+    end
+  end
   
 end

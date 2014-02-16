@@ -1,15 +1,13 @@
 require 'minitest_helper'
-require 'mor'
 require 'mor/model'
 
 class TestModel
   include Mor::Model
-  attr_accessor :id,:title,:body
-  
+  attr_accessor :id, :title, :body
 end
 
 describe Mor::Model do
-
+  
   it "acts as active_model/model" do
     instance = TestModel.new(title: "title", body: "test body")
     instance.title.must_equal "title"

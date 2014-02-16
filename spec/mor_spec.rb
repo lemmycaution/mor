@@ -1,5 +1,4 @@
 require 'minitest_helper'
-require 'mor'
 
 describe Mor do
   
