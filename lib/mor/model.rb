@@ -1,6 +1,7 @@
 require 'active_model'
 require 'active_support/concern'
 require 'active_support/hash_with_indifferent_access'
+require 'active_support/core_ext/hash'
 
 module Mor
   module Model
@@ -10,7 +11,10 @@ module Mor
       def attr_accessor *attrs
         super(*attrs)
         attrs.delete_if{ |a| a == :attributes }.each { |attr| 
-          define_method(:"#{attr}="){|val| self.attributes[attr]=val}
+          define_method(:"#{attr}="){ |val| 
+            self.attributes[attr]=val
+            self.attributes[:id]=val if attr == self.class.primary_key && attr != :id
+          }
           define_method(attr){ self.attributes[attr] }            
         }
       end
@@ -43,11 +47,16 @@ module Mor
         end
       end
       
-      def find_by hash
+      def where hash
         return nil unless hash
         self.all.select{ |app| 
           app.attributes.select{ |k,v| hash.keys.include?(k.to_sym) }.values.sort == hash.values.sort 
-        }.first
+        }
+      end
+      
+      def find_by hash
+        return nil unless hash
+        where(hash).first
       end
       
       def all
@@ -75,8 +84,8 @@ module Mor
                 
       define_model_callbacks :save, :create, :update, :destroy
       
-      validates_presence_of :id
-      validate :validate_uniqueness_of_id, unless: "persisted?"
+      validates_presence_of self.primary_key
+      validate :validate_uniqueness_of_primary_key, unless: "persisted?"
       after_create :add_to_index
       after_destroy :remove_from_index
     
@@ -127,8 +136,8 @@ module Mor
     
     private
     
-    def validate_uniqueness_of_id
-      errors.add(:id, :taken) if self.class.index.include?(self.id)
+    def validate_uniqueness_of_primary_key
+      errors.add(self.class.primary_key, :taken) if self.class.index.include?(self.id)
     end
     
     def save_or_update

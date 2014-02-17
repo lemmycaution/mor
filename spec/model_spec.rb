@@ -12,6 +12,19 @@ class TestModel
   end
 end
 
+class TestModelDiffPK
+  include Mor::Model
+  def self.primary_key
+    :slug
+  end
+  attr_accessor :slug, :title, :body, :slug
+  before_validation :set_slug 
+  private
+  def set_slug
+    self.slug = title.downcase
+  end
+end
+
 describe Mor::Model do
   
   it "acts as active_model/model" do
@@ -50,6 +63,24 @@ describe Mor::Model do
     TestModel.all.must_be_empty
     TestModel.index.must_be_empty
     TestModel.find("test-id").must_be_nil
+  end
+  
+  it "can has different primary key than id" do
+    instance = TestModelDiffPK.create(title: "Tett Name")
+    instance.persisted?.must_equal true
+    instance.id.must_equal instance.slug
+    instance.attributes[:id].must_equal instance.attributes[:slug]
+  end
+  
+  it "finds single record by attributes" do
+    instance = TestModel.create(id: "test-id", title: "title", body: "test body")
+    TestModel.find_by(title: "title").attributes.must_equal instance.attributes
+  end
+  
+  it "finds many records by attributes" do
+    instance = TestModel.create(id: "test-id", title: "title", body: "test body")
+    instance2 = TestModel.create(id: "test-id-2", title: "title", body: "test body")    
+    TestModel.where(title: "title").size.must_equal 2
   end
   
 end
