@@ -43,6 +43,13 @@ module Mor
         end
       end
       
+      def find_by hash
+        return nil unless hash
+        self.all.select{ |app| 
+          app.attributes.select{ |k,v| hash.keys.include?(k.to_sym) }.values.sort == hash.values.sort 
+        }.first
+      end
+      
       def all
         self.index.map{|id| find(id) }
       end
